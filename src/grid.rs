@@ -14,6 +14,7 @@ pub const GRID_HEIGHT: u32 = 20;
 
 */
 
+#[derive(Clone)]
 pub struct GameGrids {
     bits: [u64; 5],
 }
@@ -62,6 +63,11 @@ impl GameGrids {
     }
 
     #[inline(always)]
+    pub fn is_empty(&self, pos: Vec2) -> bool {
+        !self.get(pos)
+    }
+
+    #[inline(always)]
     pub fn set(&mut self, pos: Vec2, val: u64)  {
         let (nint, nbit) = Self::pos_to_idx(pos);
         self.bits[nint as usize] &= val << nbit;
@@ -91,7 +97,7 @@ impl GameGrids {
     }
     
     #[inline(always)]
-    pub fn check_pos_valid(&mut self, brick: &Brick, center: Vec2) -> bool {
+    pub fn check_pos_valid(&self, brick: &Brick, center: Vec2) -> bool {
         let brick_pos = brick.get_pos();
         for i in 0..4 {
             if self.get(brick_pos[i] + center) {
@@ -109,7 +115,7 @@ impl GameGrids {
     }
 
     #[inline(always)]
-    pub fn is_full_line(&self, y: i8) -> bool {
+    pub fn is_full_row(&self, y: i8) -> bool {
         let row = self.get_row(y);
         (row + 1) & (1 << 10) != 0
     }
