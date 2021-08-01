@@ -58,7 +58,7 @@ type BrickType = usize;
 type BrickState = usize;
 
 #[allow(non_snake_case)]
-pub mod Bricks {
+pub mod shapes {
     pub const I: usize = 0;
     pub const L: usize = 1;
     pub const J: usize = 2;
@@ -68,21 +68,22 @@ pub mod Bricks {
     pub const Z: usize = 6;
 }
 
+#[derive(Clone, Copy)]
 pub struct Brick(BrickType, BrickState);
 
 impl Brick {
-    pub fn from_random_num(num: usize, brick_count: usize) -> Self {
+    pub fn from_random_num(num: i32, brick_count: usize) -> Self {
         let weight_idx = num % 29;
         let state_idx = brick_count % BRICK_STATE_COUNT;
         let shape_idx = match weight_idx {
-            0..=1 => Bricks::I,
-            2..=4 => Bricks::L,
-            5..=7 => Bricks::J,
-            8..=11 => Bricks::T,
-            12..=16 => Bricks::O,
-            17..=22 => Bricks::S,
-            23..=28 => Bricks::Z,
-            _ => Bricks::I,
+            0..=1 => shapes::I,
+            2..=4 => shapes::L,
+            5..=7 => shapes::J,
+            8..=11 => shapes::T,
+            12..=16 => shapes::O,
+            17..=22 => shapes::S,
+            23..=28 => shapes::Z,
+            _ => shapes::I,
         };
         Self(shape_idx, state_idx)
     }
@@ -90,6 +91,15 @@ impl Brick {
     #[inline(always)]
     pub fn rotate(self) -> Self {
         Self(self.0, self.1 % 4)
+    }
+
+    #[inline(always)]
+    pub fn state_count(&self) -> usize {
+        match self.0 {
+            shapes::O => 1,
+            shapes::I | shapes::S | shapes::Z => 2,
+            _ => 4,
+        }
     }
 
     #[inline(always)]
