@@ -44,6 +44,8 @@ impl Game {
                 sender.send(op).unwrap();
             }
         });
+
+        self.render();
         
         loop {
             let op = receiver.recv().unwrap();
@@ -115,6 +117,10 @@ impl Game {
         }
         for i in 0..4 {
             let pos = self.brick.get_pos()[i] + self.brick_pos + Vec2(1, 1);
+            match pos {
+                Vec2(0..=9, 0..=19) => (),
+                _ => continue,
+            }
             print!("{}*", cursor::Goto(pos.0 as u16, pos.1 as u16));
         }
         for y in 1..=20 {
