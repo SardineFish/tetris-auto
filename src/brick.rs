@@ -77,7 +77,7 @@ lazy_static::lazy_static!{
         for shape in 0..7 {
             for state in 0..4 {
                 let mut bottom_pos = HashMap::<i8, i8>::new();
-                for pos in BRICKS_CONFIG[shape][state] {
+                for pos in &BRICKS_CONFIG[shape][state] {
                     match bottom_pos.get_mut(&pos.0) {
                         Some(y) => if pos.1 > *y {
                             *y = pos.1;
