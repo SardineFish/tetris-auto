@@ -12,18 +12,18 @@ pub struct Game {
 
 impl Game {
     pub fn new() -> Self {
-        let stdout = stdout().into_raw_mode().unwrap();
-        print!("{}", clear::All);
         Self {
             state: GameState::initial_state(),
             brick: Brick::from_random_num(0, 0),
             brick_pos: game::INITIAL_POS,
-            stdout: stdout,
+            stdout: io::stdout().into_raw_mode().unwrap(),
         }
     }
 
     pub fn start(mut self) {
         let (sender, receiver) = channel();
+        let mut stdout = io::stdout().into_raw_mode().unwrap();
+        write!(stdout, "{}", clear::All);
         let join = thread::spawn(move || {
             let mut stdin = io::stdin();
             for key in stdin.keys() {
@@ -33,7 +33,12 @@ impl Game {
                     Ok(Key::Down) => GameOP::Down(1),
                     Ok(Key::Char(' ')) => GameOP::New,
                     Ok(Key::Up) => GameOP::Rotate(1),
-                    Ok(Key::Ctrl('c')) => process::exit(0),
+                    Ok(Key::Ctrl('c')) => {
+                        write!(stdout, "{}", cursor::Show);
+                        stdout.suspend_raw_mode();
+                        drop(stdout);
+                        process::exit(0);
+                    },
                     _ => continue,
                 };
                 sender.send(op).unwrap();
