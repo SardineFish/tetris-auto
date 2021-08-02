@@ -107,6 +107,9 @@ impl Game {
         
         print!("{}", clear::All);
         print!("{}Score:\n {}", cursor::Goto(13, 3), self.state.score);
+        print!("{}<Left|Right|Down>: Move", cursor::Goto(13, 6));
+        print!("{}<Up>: Rotate", cursor::Goto(13, 7));
+        print!("{}<Space>: Place", cursor::Goto(13, 8));
         for y in 0..20 {
             for x in 0..10 {
                 match self.state.grids.get(Vec2(x, y)) {
@@ -118,7 +121,7 @@ impl Game {
         for i in 0..4 {
             let pos = self.brick.get_pos()[i] + self.brick_pos + Vec2(1, 1);
             match pos {
-                Vec2(0..=9, 0..=19) => (),
+                Vec2(0..=10, 0..=20) => (),
                 _ => continue,
             }
             print!("{}*", cursor::Goto(pos.0 as u16, pos.1 as u16));
