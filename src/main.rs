@@ -1,4 +1,4 @@
-#![feature(unchecked_math)]
+
 use game_play::Game;
 
 pub mod grid;
