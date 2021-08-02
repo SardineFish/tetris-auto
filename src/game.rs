@@ -2,20 +2,29 @@ use std::ops;
 
 use num::range_step_inclusive;
 
-use crate::{brick::Brick, grid::GameGrids, op::GameOP, random, vec2::{self, Vec2}};
+use crate::{brick::{self, Brick}, grid::GameGrids, op::GameOP, random::{self, RANDOM_SEED, get_random_num}, vec2::{self, Vec2}};
 
-const INITIAL_POS: Vec2 = Vec2(4, 0);
+pub const INITIAL_POS: Vec2 = Vec2(4, 0);
 
 #[derive(Clone)]
 pub struct GameState {
-    grids: GameGrids,
-    score: u32,
-    rand_num: i32,
-    ops: Vec<GameOP>,
-    brick_count: usize,
+    pub grids: GameGrids,
+    pub score: u32,
+    pub rand_num: i32,
+    pub ops: Vec<GameOP>,
+    pub brick_count: usize,
 }
 
 impl GameState {
+    pub fn initial_state() -> Self {
+        Self {
+            grids: GameGrids::new(),
+            score: 0,
+            rand_num: RANDOM_SEED,
+            ops: Vec::with_capacity(10000),
+            brick_count: 0,
+        }
+    }
     pub fn next(&self, next_states: &mut [GameState; 32]) -> usize {
         let next_rand_num = random::get_random_num(self.rand_num);
         let initial_brick = Brick::from_random_num(next_rand_num, self.brick_count);
@@ -29,8 +38,10 @@ impl GameState {
 
                 for rot in 0..initial_brick.state_count() {
                     let mut temp_state = self.clone();
+                    temp_state.next_brick();
                     let mut brick = initial_brick;
                     if self.find_way(&mut brick, rot, pos, &mut temp_state.ops) {
+                        
                         temp_state.grids.place_teris_brick(&brick, pos);
                         temp_state.evaluate_score();
                         next_states[next_count] = temp_state;
@@ -52,19 +63,19 @@ impl GameState {
         };
         for x in range_x {
             current_pos = Vec2(x, current_pos.1);
-            if !self.grids.check_pos_valid(brick, current_pos) {
+            if !self.grids.can_place_brick(brick, current_pos) {
                 return false;
             }
         }
         for _ in 0..rotations {
             *brick = brick.rotate();
-            if !self.grids.check_pos_valid(brick, current_pos) {
+            if !self.grids.can_place_brick(brick, current_pos) {
                 return false;
             }
         }
         for y in current_pos.1..pos.1 {
             current_pos.1 = y;
-            if !self.grids.check_pos_valid(brick, current_pos) {
+            if !self.grids.can_place_brick(brick, current_pos) {
                 return false;
             }
         }
@@ -85,12 +96,13 @@ impl GameState {
         true
     }
 
-    fn evaluate_score(&mut self) {
+    pub fn evaluate_score(&mut self) {
         let mut count = 0;
         let mut occupied_count = 0;
         for row in 0..20 {
             if self.grids.is_full_row(row) {
                 count += 1;
+                self.grids.clear_row(row);
             } else {
                 occupied_count += 1;
             }
@@ -103,6 +115,14 @@ impl GameState {
             _ => 0,
         };
         self.score += terris_score;
+    }
+
+    pub fn next_brick(&mut self) -> Brick {
+        self.rand_num = get_random_num(self.rand_num);
+        let brick = Brick::from_random_num(self.rand_num, self.brick_count);
+        self.brick_count += 1;
+
+        brick
     }
 }
 

@@ -1,4 +1,6 @@
 
+use std::ops::Shl;
+
 use crate::{brick::Brick, vec2::Vec2};
 
 pub const GRID_WIDTH: u32 = 10;
@@ -70,7 +72,7 @@ impl GameGrids {
     #[inline(always)]
     pub fn set(&mut self, pos: Vec2, val: u64)  {
         let (nint, nbit) = Self::pos_to_idx(pos);
-        self.bits[nint as usize] &= val << nbit;
+        self.bits[nint as usize] |= val << nbit;
     }
 
     #[inline(always)]
@@ -97,26 +99,72 @@ impl GameGrids {
     }
     
     #[inline(always)]
-    pub fn check_pos_valid(&self, brick: &Brick, center: Vec2) -> bool {
+    pub fn can_place_brick(&self, brick: &Brick, center: Vec2) -> bool {
+        if !self.brick_pos_valid(brick, center, false) {
+            return false;
+        }
+        let lower_bound = brick.get_lower_bound();
+        let mut empty = true;
+        for bound_pos in lower_bound {
+            empty = empty && self.is_empty(*bound_pos);
+        }
+        if empty {
+            return false;
+        }
+        
+        true
+    }
+
+    #[inline(always)]
+    pub fn brick_pos_valid(&self, brick: &Brick, center: Vec2, allow_outbound: bool) -> bool {
         let brick_pos = brick.get_pos();
         for i in 0..4 {
+            let pos = brick_pos[i] + center;
+            match pos {
+                Vec2(0..=9, 0..=19) => (),
+                Vec2(0..=9, y) if y < 20 => match allow_outbound {
+                    true => continue,
+                    false => return false,
+                },
+                _ => return false,
+            }
             if self.get(brick_pos[i] + center) {
                 return false;
             }
         }
-        return true;
+
+        true
     }
 
-    #[inline(always)]
+    // #[inline(always)]
     pub fn get_row(& self, y: i8) -> u64 {
         let (nint, mask) = Self::row_mask(y);
         let nseg = Self::pos_to_nseg(y);
-        (self.bits[nint] & mask) >> nseg
+        (self.bits[nint] & mask) >> (nseg * 16)
     }
 
-    #[inline(always)]
+    // #[inline(always)]
     pub fn is_full_row(&self, y: i8) -> bool {
         let row = self.get_row(y);
         (row + 1) & (1 << 10) != 0
+    }
+
+    #[inline]
+    pub fn clear_row(&mut self, y: i8) -> u64 {
+        let (nint, mask) = Self::row_mask(y);
+        let nseg = Self::pos_to_nseg(y);
+        let rowbits = (self.bits[nint] & mask) >> (nseg * 16);
+
+        let higher_mask = match nseg {
+            3 => 0,
+            _ => u64::MAX << ((nseg as u64 + 1) * 16) 
+        };
+        self.bits[nint] = (self.bits[nint] & higher_mask) | ((self.bits[nint] << 16) & (!higher_mask));
+        for nint in (0..nint).rev() {
+            self.bits[nint] = self.bits[nint].rotate_left(16);
+            self.bits[nint + 1] = (self.bits[nint + 1] & !0xFFFF) | (self.bits[nint] & 0xFFFF);
+        }
+        self.bits[0] &= 0xFFFF_FFFF_FFFF_0000;
+        rowbits
     }
 }
