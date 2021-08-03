@@ -1,12 +1,13 @@
 use std::ops;
 
 use num::range_step_inclusive;
+use termion::{clear, cursor};
 
 use crate::{brick::{self, Brick}, grid::GameGrids, op::GameOP, random::{self, RANDOM_SEED, get_random_num}, vec2::{self, Vec2}};
 
 pub const INITIAL_POS: Vec2 = Vec2(4, 0);
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct GameState {
     pub grids: GameGrids,
     pub score: u32,
@@ -25,7 +26,7 @@ impl GameState {
             brick_count: 0,
         }
     }
-    pub fn next(&self, next_states: &mut [GameState; 32]) -> usize {
+    pub fn next(&self, next_states: &mut [GameState]) -> usize {
         let next_rand_num = random::get_random_num(self.rand_num);
         let initial_brick = Brick::from_random_num(next_rand_num, self.brick_count);
         let mut next_count = 0;
@@ -37,6 +38,12 @@ impl GameState {
                 }
 
                 for rot in 0..initial_brick.state_count() {
+
+                    let rotated_brick = initial_brick.rotate_n(rot);
+                    if !self.grids.brick_pos_valid(&rotated_brick, pos, false) {
+                        continue;
+                    }
+
                     let mut temp_state = self.clone();
                     temp_state.next_brick();
                     let mut brick = initial_brick;
@@ -46,6 +53,9 @@ impl GameState {
                         temp_state.evaluate_score();
                         next_states[next_count] = temp_state;
                         next_count += 1;
+                        if next_count >= next_states.len() {
+                            return next_count;
+                        }
                     }
                 }
             }
@@ -63,19 +73,19 @@ impl GameState {
         };
         for x in range_x {
             current_pos = Vec2(x, current_pos.1);
-            if !self.grids.can_place_brick(brick, current_pos) {
+            if !self.grids.brick_pos_valid(brick, current_pos, true) {
                 return false;
             }
         }
         for _ in 0..rotations {
             *brick = brick.rotate();
-            if !self.grids.can_place_brick(brick, current_pos) {
+            if !self.grids.brick_pos_valid(brick, current_pos, true) {
                 return false;
             }
         }
         for y in current_pos.1..pos.1 {
             current_pos.1 = y;
-            if !self.grids.can_place_brick(brick, current_pos) {
+            if !self.grids.brick_pos_valid(brick, current_pos, true) {
                 return false;
             }
         }
@@ -124,6 +134,37 @@ impl GameState {
 
         brick
     }
+
+    pub fn render(&self) {
+        print!("{}", clear::All);
+        print!("{}Score:\n {}", cursor::Goto(13, 3), self.score);
+        for y in 0..20 {
+            for x in 0..10 {
+                match self.grids.get(Vec2(x, y)) {
+                    true => print!("{}*", cursor::Goto(x as u16 + 1, y as u16 + 1)),
+                    false => print!("{} ", cursor::Goto(x as u16 + 1, y as u16 + 1)),
+                }
+            }
+        }
+        for y in 1..=20 {
+            print!("{}|", cursor::Goto(11, y));
+        }
+        for x in 1..=10 {
+            print!("{}-", cursor::Goto(x, 21));
+        }
+    }
+}
+
+impl PartialEq for GameState {
+    fn eq(&self, other: &Self) -> bool {
+        self.score == other.score
+    }
+}
+
+impl PartialOrd for GameState {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.score.partial_cmp(&other.score)
+    }    
 }
 
 #[cfg(test)]

@@ -1,8 +1,28 @@
-use std::{array::IntoIter, mem::{self, MaybeUninit}};
+use std::{ mem::{self, MaybeUninit}, slice::Iter};
+
+use crate::game::GameState;
 
 pub struct FixedHeap<T, const N: usize> {
     data: [T; N],
     actual_len: usize,
+}
+
+impl<T, const N: usize> FixedHeap<T, N> {
+    pub fn clear(&mut self) {
+        self.actual_len = 0;
+    }
+    pub fn iter(&self) -> Iter<T> {
+        (&self.data[..self.actual_len]).iter()
+    }
+    pub fn len(&self) -> usize {
+        self.actual_len
+    }
+    pub fn peak(&self) -> Option<&T> {
+        match self.actual_len {
+            0 => None,
+            _ => Some(&self.data[0]),
+        }
+    }
 }
 
 impl<T, const N: usize> Default for FixedHeap<T, N> where T : Default {
@@ -27,7 +47,7 @@ impl<T, const N: usize> FixedHeap<T, N> where T : Copy + Default {
     }
 }
 
-impl<T, const N: usize> FixedHeap<T, N> where T : Ord {
+impl<T, const N: usize> FixedHeap<T, N> where T : PartialOrd {
     pub fn push(&mut self, element: T) -> Option<T> {
         
         if self.actual_len == self.data.len() {
@@ -85,7 +105,40 @@ impl<T, const N: usize> IntoIterator for FixedHeap<T, N> {
     type IntoIter = IntoIter<T, N>;
     type Item = T;
     fn into_iter(self) -> Self::IntoIter {
-        IntoIter::new(self.data)
+        IntoIter {
+            data: self.data,
+            actual_len: self.actual_len,
+            current: 0
+        }
+    }
+}
+
+impl<'a, T, const N: usize> IntoIterator for &'a FixedHeap<T, N> {
+    type IntoIter = Iter<'a, T>;
+    type Item = &'a T;
+    fn into_iter(self) -> Self::IntoIter {
+        (&self.data[..self.actual_len]).into_iter()
+    }
+}
+
+pub struct IntoIter<T, const N: usize> {
+    data: [T; N],
+    current: usize,
+    actual_len: usize,
+}
+
+impl<T, const N: usize> Iterator for IntoIter<T, N> {
+    type Item = T;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.current >= self.actual_len {
+            return None;
+        }
+        let element = mem::replace(
+            &mut self.data[self.current], 
+            unsafe {mem::MaybeUninit::uninit().assume_init()}
+        );
+        self.current += 1;
+        Some(element)
     }
 }
 
@@ -97,7 +150,7 @@ mod test{
     #[test]
     fn test(){
         const DATA_SIZE: usize = 32768;
-        const HEAP_SIZE: usize = 128;
+        const HEAP_SIZE: usize = 8192;
         type DataType = i32;
         let mut rng = rand::thread_rng();
         let mut data: [DataType; DATA_SIZE] = [DataType::default(); DATA_SIZE];

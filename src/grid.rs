@@ -16,7 +16,7 @@ pub const GRID_HEIGHT: u32 = 20;
 
 */
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct GameGrids {
     bits: [u64; 5],
 }
