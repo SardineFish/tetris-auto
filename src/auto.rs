@@ -17,7 +17,7 @@ impl TetrisAuto{
         let mut curr_heap = Box::new(FixedHeap::<GameState, HEAP_SIZE>::default());
         let mut next_heap = Box::new(FixedHeap::<GameState, HEAP_SIZE>::default());
 
-        let mut next_states: [GameState; 34] = create_array_clone(GameState::default());
+        let mut next_states: [GameState; 64] = create_array_clone(GameState::default());
         let initial_state = GameState::initial_state();
         next_heap.push(initial_state);
         while next_heap.len() > 0 {
