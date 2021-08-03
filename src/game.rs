@@ -134,6 +134,6 @@ mod test {
 
     #[test]
     fn test() {
-        assert_eq!(size_of::<GameState>(), 0);
+        // assert_eq!(size_of::<GameState>(), 0);
     }
 }

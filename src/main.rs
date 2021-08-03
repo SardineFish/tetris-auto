@@ -9,6 +9,7 @@ pub mod random;
 pub mod op;
 pub mod game_play;
 pub mod auto;
+pub mod fixed_heap;
 
 fn main() {
     let game = Game::new();
