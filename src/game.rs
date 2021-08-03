@@ -138,6 +138,7 @@ impl GameState {
     pub fn render(&self) {
         print!("{}", clear::All);
         print!("{}Score:\n {}", cursor::Goto(13, 3), self.score);
+        print!("{}Bricks: {}", cursor::Goto(13, 5), self.brick_count);
         for y in 0..20 {
             for x in 0..10 {
                 match self.grids.get(Vec2(x, y)) {
