@@ -1,4 +1,5 @@
 
+use auto::TetrisAuto;
 use game_play::Game;
 
 pub mod grid;
@@ -10,8 +11,10 @@ pub mod op;
 pub mod game_play;
 pub mod auto;
 pub mod fixed_heap;
+pub mod utils;
 
 fn main() {
     let game = Game::new();
-    game.start();
+    // game.start();
+    TetrisAuto::start();
 }

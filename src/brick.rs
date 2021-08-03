@@ -123,6 +123,11 @@ impl Brick {
     }
 
     #[inline(always)]
+    pub fn rotate_n(self, rot: usize) -> Self {
+        Self(self.0, (self.1 + rot) % 4)
+    }
+
+    #[inline(always)]
     pub fn state_count(&self) -> usize {
         match self.0 {
             shapes::O => 1,
