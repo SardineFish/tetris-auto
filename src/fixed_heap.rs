@@ -3,7 +3,7 @@ use std::{ mem::{self, MaybeUninit}, slice::Iter};
 use crate::game::GameState;
 
 pub struct FixedHeap<T, const N: usize> {
-    data: [T; N],
+    data: Vec<T>,
     actual_len: usize,
 }
 
@@ -27,12 +27,12 @@ impl<T, const N: usize> FixedHeap<T, N> {
 
 impl<T, const N: usize> Default for FixedHeap<T, N> where T : Default {
     fn default() -> Self {
-        let mut array: [T; N] = unsafe { MaybeUninit::uninit().assume_init() };
-        for item in &mut array {
-            *item = T::default();
-        }
+        // let mut array: [T; N] = unsafe { MaybeUninit::uninit().assume_init() };
+        // for item in &mut array {
+        //     *item = T::default();
+        // }
         Self {
-            data: array,
+            data: Vec::with_capacity(N),
             actual_len: 0,
         }
     }
@@ -41,7 +41,7 @@ impl<T, const N: usize> Default for FixedHeap<T, N> where T : Default {
 impl<T, const N: usize> FixedHeap<T, N> where T : Copy + Default {
     fn new() -> Self {
         Self {
-            data: [T::default(); N],
+            data: Vec::with_capacity(N),
             actual_len: 0,
         }
     }
@@ -50,7 +50,7 @@ impl<T, const N: usize> FixedHeap<T, N> where T : Copy + Default {
 impl<T, const N: usize> FixedHeap<T, N> where T : PartialOrd {
     pub fn push(&mut self, element: T) -> Option<T> {
         
-        if self.actual_len == self.data.len() {
+        if self.actual_len == N {
             Some(self.replace_root(element))
         } else {
             self.push_back(element);
@@ -58,7 +58,11 @@ impl<T, const N: usize> FixedHeap<T, N> where T : PartialOrd {
         }
     }
     fn push_back(&mut self, element: T) {
-        self.data[self.actual_len] = element;
+        if self.actual_len == self.data.len() {
+            self.data.push(element);
+        } else {
+            self.data[self.actual_len] = element;
+        }
         let mut pos = self.actual_len;
         self.actual_len += 1;
 
@@ -122,7 +126,7 @@ impl<'a, T, const N: usize> IntoIterator for &'a FixedHeap<T, N> {
 }
 
 pub struct IntoIter<T, const N: usize> {
-    data: [T; N],
+    data: Vec<T>,
     current: usize,
     actual_len: usize,
 }
