@@ -4,7 +4,7 @@ use termion::{input::{TermRead}, raw::IntoRawMode};
 
 use crate::{fixed_heap::FixedHeap, game::GameState};
 
-const HEAP_SIZE: usize = 44000;
+const HEAP_SIZE: usize = 440000;
 
 pub struct  TetrisAuto {
     
@@ -17,7 +17,7 @@ impl TetrisAuto{
         let mut curr_heap = FixedHeap::<GameState, HEAP_SIZE>::default();
         let mut next_heap = FixedHeap::<GameState, HEAP_SIZE>::default();
 
-        let mut next_states: [GameState; 16] = array_init::array_init(|_| GameState::default());
+        let mut next_states: [GameState; 64] = array_init::array_init(|_| GameState::default());
         let initial_state = GameState::initial_state();
         next_heap.push(initial_state);
         while next_heap.len() > 0 {

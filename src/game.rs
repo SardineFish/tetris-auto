@@ -90,41 +90,40 @@ impl GameState {
             }
         }
         
-        ops.push(GameOP::New);
-        match diff.0 {
-            x if x < 0 => ops.push(GameOP::Left(i8::abs(diff.0))),
-            0 => (),
-            _ => ops.push(GameOP::Right(diff.0)),
-        };
-        if rotations > 0 {
-            ops.push(GameOP::Rotate(rotations as i8));
-        }
-        if diff.1 > 0 {
-            ops.push(GameOP::Down(diff.1));
-        }
+        // ops.push(GameOP::New);
+        // match diff.0 {
+        //     x if x < 0 => ops.push(GameOP::Left(i8::abs(diff.0))),
+        //     0 => (),
+        //     _ => ops.push(GameOP::Right(diff.0)),
+        // };
+        // if rotations > 0 {
+        //     ops.push(GameOP::Rotate(rotations as i8));
+        // }
+        // if diff.1 > 0 {
+        //     ops.push(GameOP::Down(diff.1));
+        // }
         
         true
     }
 
     pub fn evaluate_score(&mut self) {
         let mut count = 0;
-        let mut occupied_count = 0;
+        let mut occupied_blocks_count = 0;
         for row in 0..20 {
+            occupied_blocks_count += self.grids.blocks_in_row(row);
             if self.grids.is_full_row(row) {
                 count += 1;
                 self.grids.clear_row(row);
-            } else {
-                occupied_count += 1;
             }
         }
         let terris_score = match count {
-            1 => occupied_count * 1,
-            2 => occupied_count * 3,
-            3 => occupied_count * 6,
-            4 => occupied_count * 10,
+            1 => occupied_blocks_count * 1,
+            2 => occupied_blocks_count * 3,
+            3 => occupied_blocks_count * 6,
+            4 => occupied_blocks_count * 10,
             _ => 0,
         };
-        self.score += terris_score;
+        self.score += terris_score as u32;
     }
 
     pub fn next_brick(&mut self) -> Brick {
