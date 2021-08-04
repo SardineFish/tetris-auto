@@ -104,15 +104,13 @@ impl GameGrids {
             return false;
         }
         let lower_bound = brick.get_lower_bound();
-        let mut empty = true;
+        let mut can_place = false;
         for bound_pos in lower_bound {
-            empty = empty && self.is_empty(*bound_pos);
+            let pos = center + *bound_pos;
+            
+            can_place = can_place || pos.1 == 20 || self.get(pos);
         }
-        if empty {
-            return false;
-        }
-        
-        true
+        can_place
     }
 
     #[inline(always)]
@@ -155,7 +153,7 @@ impl GameGrids {
     }
 
     #[inline]
-    pub fn clear_row(&mut self, y: i8) -> u64 {
+    pub fn remove_row(&mut self, y: i8) -> u64 {
         let (nint, mask) = Self::row_mask(y);
         let nseg = Self::pos_to_nseg(y);
         let rowbits = (self.bits[nint] & mask) >> (nseg * 16);

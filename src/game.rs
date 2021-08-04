@@ -11,6 +11,7 @@ pub const INITIAL_POS: Vec2 = Vec2(4, 0);
 pub struct GameState {
     pub grids: GameGrids,
     pub score: u32,
+    pub sp_score: i32,
     pub rand_num: i32,
     pub ops: Vec<GameOP>,
     pub brick_count: usize,
@@ -21,6 +22,7 @@ impl GameState {
         Self {
             grids: GameGrids::new(),
             score: 0,
+            sp_score: 0,
             rand_num: RANDOM_SEED,
             ops: Vec::with_capacity(10000),
             brick_count: 0,
@@ -40,7 +42,7 @@ impl GameState {
                 for rot in 0..initial_brick.state_count() {
 
                     let rotated_brick = initial_brick.rotate_n(rot);
-                    if !self.grids.brick_pos_valid(&rotated_brick, pos, false) {
+                    if !self.grids.can_place_brick(&rotated_brick, pos) {
                         continue;
                     }
 
@@ -109,11 +111,17 @@ impl GameState {
     pub fn evaluate_score(&mut self) {
         let mut count = 0;
         let mut occupied_blocks_count = 0;
+        let mut height = 0;
+        let mut top_reached = false;
         for row in 0..20 {
             occupied_blocks_count += self.grids.blocks_in_row(row);
+            if !top_reached && self.grids.get_row(row) != 0 {
+                top_reached = true;
+                height = 20 - row;
+            }
             if self.grids.is_full_row(row) {
                 count += 1;
-                self.grids.clear_row(row);
+                self.grids.remove_row(row);
             }
         }
         let terris_score = match count {
@@ -124,6 +132,7 @@ impl GameState {
             _ => 0,
         };
         self.score += terris_score as u32;
+        self.sp_score = self.score as i32 - (height as i32) * 10;
     }
 
     pub fn next_brick(&mut self) -> Brick {
@@ -136,7 +145,7 @@ impl GameState {
 
     pub fn render(&self) {
         print!("{}", clear::All);
-        print!("{}Score:\n {}", cursor::Goto(13, 3), self.score);
+        print!("{}Score: {}", cursor::Goto(13, 3), self.score);
         print!("{}Bricks: {}", cursor::Goto(13, 5), self.brick_count);
         for y in 0..20 {
             for x in 0..10 {
@@ -157,13 +166,13 @@ impl GameState {
 
 impl PartialEq for GameState {
     fn eq(&self, other: &Self) -> bool {
-        self.score == other.score
+        self.sp_score == other.sp_score
     }
 }
 
 impl PartialOrd for GameState {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.score.partial_cmp(&other.score)
+        self.sp_score.partial_cmp(&other.sp_score)
     }    
 }
 
