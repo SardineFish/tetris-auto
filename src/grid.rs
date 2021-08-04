@@ -149,6 +149,11 @@ impl GameGrids {
         (row + 1) & (1 << 10) != 0
     }
 
+    pub fn blocks_in_row(&self, y: i8) -> usize {
+        let row = self.get_row(y);
+        10 - zeros_in_num(row, 10)
+    }
+
     #[inline]
     pub fn clear_row(&mut self, y: i8) -> u64 {
         let (nint, mask) = Self::row_mask(y);
@@ -166,5 +171,36 @@ impl GameGrids {
         }
         self.bits[0] &= 0xFFFF_FFFF_FFFF_0000;
         rowbits
+    }
+}
+
+fn zeros_in_num(mut x: u64, max_pos: usize) -> usize {
+    let mut mask = 1;
+    let mut count = 0;
+    loop {
+        mask = (x + mask) ^ x;
+        if mask >= 1 << max_pos {
+            break;
+        }
+        count += 1;
+        x |= mask;
+    }
+    count
+}
+
+#[cfg(test)]
+mod test {
+    use crate::grid::zeros_in_num;
+
+    #[test]
+    fn test_zeros_in_num() {
+        assert_eq!(zeros_in_num(0b11_1111_1111, 10), 0);
+        assert_eq!(zeros_in_num(0b11_1111_1110, 10), 1);
+        assert_eq!(zeros_in_num(0b01_1110_1110, 10), 3);
+        assert_eq!(zeros_in_num(0b11_1000_1111, 10), 3);
+        assert_eq!(zeros_in_num(0b00_0000_0000, 10), 10);
+        assert_eq!(zeros_in_num(0b01_1001_0110, 10), 5);
+        assert_eq!(zeros_in_num(0b11100_1111_1111, 10), 2);
+        assert_eq!(zeros_in_num(0b00_1111_1111, 10), 2);
     }
 }
