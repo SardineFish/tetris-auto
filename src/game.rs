@@ -111,10 +111,13 @@ impl GameState {
     pub fn evaluate_score(&mut self) {
         let mut count = 0;
         let mut occupied_blocks_count = 0;
+        let mut density = 0f32;
         let mut height = 0;
         let mut top_reached = false;
         for row in 0..20 {
-            occupied_blocks_count += self.grids.blocks_in_row(row);
+            let blocks = self.grids.blocks_in_row(row);
+            occupied_blocks_count += blocks;
+            density = density + blocks as f32;
             if !top_reached && self.grids.get_row(row) != 0 {
                 top_reached = true;
                 height = 20 - row;
@@ -124,6 +127,7 @@ impl GameState {
                 self.grids.remove_row(row);
             }
         }
+        density /= height as f32 * 10f32;
         let terris_score = match count {
             1 => occupied_blocks_count * 1,
             2 => occupied_blocks_count * 3,
@@ -132,7 +136,10 @@ impl GameState {
             _ => 0,
         };
         self.score += terris_score as u32;
-        self.sp_score = self.score as i32 - (height as i32) * 10;
+        self.sp_score = self.score as i32 
+            - (height as i32 - 14).abs() / 2
+            + (occupied_blocks_count as i32) * 3
+            + (density * 10f32) as i32;
     }
 
     pub fn next_brick(&mut self) -> Brick {
