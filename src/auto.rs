@@ -26,6 +26,9 @@ impl TetrisAuto{
             next_heap.clear();
 
             curr_heap.peak().unwrap().render();
+            if curr_heap.peak().unwrap().brick_count >= 10000 {
+                return;
+            }
             stdout.flush().unwrap();
 
             // match stdin_key.next() {
