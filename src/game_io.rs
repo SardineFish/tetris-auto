@@ -138,7 +138,9 @@ mod unix_renderer {
 
 #[cfg(target_family="windows")]
 mod win_renderer {
-    use std::io::{Read, stdin};
+    use std::io::{Read, stdin, stdout};
+
+    use crossterm::{QueueableCommand, terminal::{self, ClearType}};
 
     use crate::vec2::Vec2;
 
@@ -155,6 +157,7 @@ mod win_renderer {
 
     impl RenderGame for GameRenderer {
         fn render_game(&mut self, state: &crate::game::GameState) {
+            stdout().queue(terminal::Clear(ClearType::All));
             for y in 0..20 {
                 for x in 0..10 {
                     match state.grids.get(Vec2(x, y)) {
@@ -162,8 +165,9 @@ mod win_renderer {
                         false => print!(" "),
                     }
                 }
+                println!("|");
+
             }
-            println!("|");
             for x in 1..=10 {
                 print!("-");
             }
