@@ -95,10 +95,28 @@ lazy_static::lazy_static!{
 
         bricks_bottom
     };
+
+    pub static ref BRICKS_TOP: [[i8; 4]; 7] = {
+        let mut bricks_top: [[i8; 4]; 7] = Default::default();
+
+        for shape in 0..7 {
+            for state in 0..4 {
+                let mut min_y = i8::MAX;
+                for pos in &BRICKS_CONFIG[shape][state] {
+                    if pos.1 < min_y {
+                        min_y = pos.1;
+                    }
+                }
+                bricks_top[shape][state] = min_y;
+            }
+        }
+
+        bricks_top
+    };
 }
 
 #[derive(Clone, Copy, Default)]
-pub struct Brick(BrickType, BrickState);
+pub struct Brick(pub BrickType, pub BrickState);
 
 impl Brick {
     pub fn from_random_num(num: i32, brick_count: usize) -> Self {
@@ -160,4 +178,9 @@ impl Brick {
     pub fn get_lower_bound(&self) -> &'static Vec<Vec2> {
         &BRICKS_BOTTOM[self.0][self.1]
     }
+
+    #[inline(always)]
+    pub fn get_top_pos(&self, y: i8) -> i8 {
+        BRICKS_TOP[self.0][self.1] + y
+    } 
 }

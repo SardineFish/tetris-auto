@@ -3,9 +3,10 @@ use std::ops;
 use num::range_step_inclusive;
 use termion::{clear, cursor};
 
-use crate::{brick::{self, Brick}, grid::GameGrids, op::GameOP, random::{self, RANDOM_SEED, get_random_num}, vec2::{self, Vec2}};
+use crate::{brick::{self, Brick}, grid::GameGrids, op::{self, GameOP}, random::{self, RANDOM_SEED, get_random_num}, vec2::{self, Vec2}};
 
 pub const INITIAL_POS: Vec2 = Vec2(4, 0);
+pub const MAX_BRICKS_COUNT: usize = 10000;
 
 #[derive(Clone, Default)]
 pub struct GameState {
@@ -13,7 +14,7 @@ pub struct GameState {
     pub score: u32,
     pub sp_score: i32,
     pub rand_num: i32,
-    pub ops: Vec<GameOP>,
+    pub brick_stack: Vec<u16>,
     pub brick_count: usize,
 }
 
@@ -24,7 +25,7 @@ impl GameState {
             score: 0,
             sp_score: 0,
             rand_num: RANDOM_SEED,
-            ops: Vec::with_capacity(10000),
+            brick_stack: Vec::with_capacity(MAX_BRICKS_COUNT),
             brick_count: 0,
         }
     }
@@ -45,15 +46,16 @@ impl GameState {
                     if !self.grids.can_place_brick(&rotated_brick, pos) {
                         continue;
                     }
+                    if rotated_brick.get_top_pos(pos.1) == 0 {
+                        continue;
+                    }
 
-                    let mut temp_state = self.clone();
-                    temp_state.next_brick();
                     let mut brick = initial_brick;
-                    if self.find_way(&mut brick, rot, pos, &mut temp_state.ops) {
-                        
-                        temp_state.grids.place_teris_brick(&brick, pos);
-                        temp_state.evaluate_score();
-                        next_states[next_count] = temp_state;
+                    if self.find_way(&mut brick, rot, pos) {
+                        let next_state = &mut next_states[next_count];
+                        next_state.clone_from(self);
+                        next_state.place_brick(&rotated_brick, pos, rot);
+
                         next_count += 1;
                         if next_count >= next_states.len() {
                             return next_count;
@@ -65,7 +67,7 @@ impl GameState {
         next_count
     }
 
-    pub fn find_way(&self, brick: &mut Brick, rotations: usize, pos: Vec2, ops: &mut Vec<GameOP>) -> bool {
+    pub fn find_way(&self, brick: &mut Brick, rotations: usize, pos: Vec2) -> bool {
         let mut current_pos = INITIAL_POS;
         let diff = pos - current_pos;
 
@@ -137,8 +139,8 @@ impl GameState {
         };
         self.score += terris_score as u32;
         self.sp_score = self.score as i32 
-            - (height as i32 - 14).abs() * 1
-            - (height as i32 - 16).clamp(0, 10).pow(3) * 2
+            - (height as i32 - 16).abs() * 1
+            - (height as i32 - 16).clamp(0, 10).pow(4) * 3
             + (occupied_blocks_count as i32) * 10
             + (density * 200f32) as i32;
     }
@@ -169,6 +171,50 @@ impl GameState {
         for x in 1..=10 {
             print!("{}-", cursor::Goto(x, 21));
         }
+    }
+
+    pub fn clone_from(&mut self, state: &Self) {
+        self.brick_stack.clear();
+        self.grids = state.grids.clone();
+        self.brick_count = state.brick_count;
+        self.brick_stack.extend_from_slice(&state.brick_stack[..]);
+        self.rand_num = state.rand_num;
+        self.score = state.score;
+        self.sp_score = state.sp_score;
+    }
+
+    pub fn place_brick(&mut self, brick: &Brick, pos: Vec2, rot: usize) {
+        self.grids.place_teris_brick(brick, pos);
+        self.next_brick();
+        self.evaluate_score();
+        self.brick_stack.push((pos.0 as u16) | (pos.1 as u16) << 4 | (rot as u16) << 10);
+    }
+
+    pub fn get_op_sequence(&self) -> Vec<GameOP> {
+        let mut ops = Vec::with_capacity(MAX_BRICKS_COUNT * 3);
+        let mut ghost = GameState::initial_state();
+        for state in &self.brick_stack {
+            let pos = Vec2((state & 0b1111) as i8, ((state & 0b111110000) >> 4) as i8);
+            let rot = (state & 0b1111_0000000000) >> 10;
+            
+            let brick = ghost.next_brick();
+            let diff = pos - INITIAL_POS;
+            ops.push(GameOP::New);
+            match diff.0 {
+                x if x < 0 => ops.push(GameOP::Left(-x)),
+                x if x > 0 => ops.push(GameOP::Right(x)),
+                _ => (),
+            }
+            if rot > 0 {
+                ops.push(GameOP::Rotate(rot as i8));
+            }
+            if diff.1 > 0 {
+                ops.push(GameOP::Down(diff.1));
+            }
+
+        }
+
+        ops
     }
 }
 
