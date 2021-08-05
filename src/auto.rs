@@ -1,11 +1,11 @@
 use std::{array, collections::BinaryHeap, io::{self, Write, stdin, stdout}, mem, os::macos::fs, process, sync::{Arc, mpsc::channel}, thread};
 
 use termion::{event::Key, input::{TermRead}, raw::IntoRawMode};
-use crate::op::GameOPStr;
+use crate::{game::MAX_BRICKS_COUNT, op::GameOPStr};
 
 use crate::{fixed_heap::FixedHeap, game::GameState};
 
-const HEAP_SIZE: usize = 100000;
+const HEAP_SIZE: usize = 10000;
 const EXPAND_SIZE: usize = 34;
 
 pub struct  TetrisAuto {
@@ -39,14 +39,12 @@ impl TetrisAuto{
             next_heap.clear();
 
             curr_heap.peak().unwrap().render();
-            if curr_heap.peak().unwrap().brick_count >= 10000 {
+            if curr_heap.peak().unwrap().brick_count >= MAX_BRICKS_COUNT {
+                Self::save_result(curr_heap.peak().unwrap());
                 return;
             }
             if let Ok(_) = receiver.try_recv() {
-                let op_str = curr_heap.peak().unwrap().get_op_sequence().to_op_string();
-                stdout.suspend_raw_mode().unwrap();
-                std::fs::write("./op_sequence", op_str).unwrap();
-                // println!("\r\n{}", op_str);
+                Self::save_result(curr_heap.peak().unwrap());
                 return;
             }
             stdout.flush().unwrap();
@@ -69,5 +67,11 @@ impl TetrisAuto{
             }
 
         }
+    }
+
+    pub fn save_result(state: &GameState) {
+        let op_str = state.get_op_sequence().to_op_string();
+        // stdout.suspend_raw_mode().unwrap();
+        std::fs::write("./op_sequence", op_str).unwrap();
     }
 }
