@@ -11,7 +11,7 @@ use std::{
 
 use crate::{fixed_heap::FixedHeap, game::GameState, game_io::GameRenderer};
 
-const HEAP_SIZE: usize = 20000;
+const HEAP_SIZE: usize = 10000;
 const EXPAND_SIZE: usize = 34;
 const JITTER_RATE: f64 = 0.02;
 
@@ -36,6 +36,10 @@ impl TetrisAuto {
                     best_state = state;
                     renderer.render_game(&best_state);
                     renderer.flush();
+                }
+                if best_state.brick_count == MAX_BRICKS_COUNT {
+                    let seqence = best_state.get_op_sequence().to_op_string();
+                    std::fs::write(format!("op_sequence_{}", best_state.score), seqence).unwrap();
                 }
             }
         });

@@ -31,7 +31,7 @@ fn main() {
     //     }
     // });
 
-    let (mut kill_bus, join) = TetrisAuto::run_continuous(8);
+    let (mut kill_bus, join) = TetrisAuto::run_continuous(10);
     let mut input = game_io::GameInput::new();
     loop {
         if input.try_get_interrupt().is_ok() {
