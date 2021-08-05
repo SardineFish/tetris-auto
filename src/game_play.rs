@@ -1,13 +1,11 @@
-use std::{io::{self, Stdout, Write}, process, sync::mpsc::channel, thread};
-
-use crate::{brick::Brick, game::{self, GameState}, op::GameOP, vec2::{Vec2}};
-use termion::{event::Key, clear, cursor, input::TermRead, raw::{IntoRawMode, RawTerminal}};
+use crate::{brick::Brick, game::{self, GameState}, game_io::{self, GetInput, RenderGame}, op::GameOP, vec2::{Vec2}};
+use crate::game_io::GameRenderer;
 
 pub struct Game {
     state: GameState,
     brick_pos: Vec2,
     brick: Brick,
-    stdout: RawTerminal<Stdout>
+    renderer: GameRenderer,
 }
 
 impl Game {
@@ -16,40 +14,18 @@ impl Game {
             state: GameState::initial_state(),
             brick: Brick::from_random_num(0, 0),
             brick_pos: game::INITIAL_POS,
-            stdout: io::stdout().into_raw_mode().unwrap(),
+            renderer: GameRenderer::new(),
         }
     }
 
     pub fn start(mut self) {
-        let (sender, receiver) = channel();
-        let mut stdout = io::stdout().into_raw_mode().unwrap();
-        write!(stdout, "{}", clear::All).unwrap();
-        let _ = thread::spawn(move || {
-            let stdin = io::stdin();
-            for key in stdin.keys() {
-                let op = match key {
-                    Ok(Key::Left) => GameOP::Left(1),
-                    Ok(Key::Right) => GameOP::Right(1),
-                    Ok(Key::Down) => GameOP::Down(1),
-                    Ok(Key::Char(' ')) => GameOP::New,
-                    Ok(Key::Up) => GameOP::Rotate(1),
-                    Ok(Key::Ctrl('c')) => {
-                        write!(stdout, "{}", cursor::Show).unwrap();
-                        stdout.suspend_raw_mode().unwrap();
-                        drop(stdout);
-                        process::exit(0);
-                    },
-                    _ => continue,
-                };
-                sender.send(op).unwrap();
-            }
-        });
-
+        let mut input = game_io::GameInput::new();
         self.render();
         
         loop {
-            let op = receiver.recv().unwrap();
+            let op = input.get_input();
             if !self.update(op) {
+                
                 self.render();
                 println!("Game Over!");
                 return;
@@ -103,38 +79,11 @@ impl Game {
         true
     }
 
+
     pub fn render(&mut self) {
-        
-        print!("{}", clear::All);
-        print!("{}Score:\n {}", cursor::Goto(13, 3), self.state.score);
-        print!("{}<Left|Right|Down>: Move", cursor::Goto(13, 6));
-        print!("{}<Up>: Rotate", cursor::Goto(13, 7));
-        print!("{}<Space>: Place", cursor::Goto(13, 8));
-        for y in 0..20 {
-            for x in 0..10 {
-                match self.state.grids.get(Vec2(x, y)) {
-                    true => print!("{}*", cursor::Goto(x as u16 + 1, y as u16 + 1)),
-                    false => print!("{} ", cursor::Goto(x as u16 + 1, y as u16 + 1)),
-                }
-            }
-        }
-        for i in 0..4 {
-            let pos = self.brick.get_pos()[i] + self.brick_pos + Vec2(1, 1);
-            match pos {
-                Vec2(0..=10, 0..=20) => (),
-                _ => continue,
-            }
-            print!("{}*", cursor::Goto(pos.0 as u16, pos.1 as u16));
-        }
-        for y in 1..=20 {
-            print!("{}|", cursor::Goto(11, y));
-        }
-        for x in 1..=10 {
-            print!("{}-", cursor::Goto(x, 21));
-        }
-        
-        
-        println!("{}", cursor::Hide);
-        self.stdout.flush().unwrap();
+        self.renderer.render_game(&self.state);
+        self.renderer.render_user_hint();
+        self.renderer.render_brick(&self.brick, self.brick_pos);
     }
+
 }

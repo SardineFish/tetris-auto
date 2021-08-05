@@ -1,9 +1,7 @@
-use std::{io::{Write, stdin, stdout}, mem, sync::{mpsc::channel}, thread};
+use std::mem;
+use crate::{game::MAX_BRICKS_COUNT, game_io::{GetInput, RenderGame}, op::GameOPStr};
 
-use termion::{event::Key, input::{TermRead}, raw::IntoRawMode};
-use crate::{game::MAX_BRICKS_COUNT, op::GameOPStr};
-
-use crate::{fixed_heap::FixedHeap, game::GameState};
+use crate::{fixed_heap::FixedHeap, game::GameState, game_io::{GameInput, GameRenderer}};
 
 const HEAP_SIZE: usize = 10000;
 const EXPAND_SIZE: usize = 34;
@@ -15,21 +13,11 @@ pub struct  TetrisAuto {
 impl TetrisAuto{
     pub fn start()  {
         // let mut stdin_key = stdin().keys();
-        let mut stdout = stdout().into_raw_mode().unwrap();
         let mut curr_heap = FixedHeap::<GameState, HEAP_SIZE>::default();
         let mut next_heap = FixedHeap::<GameState, HEAP_SIZE>::default();
 
-        let (sender, receiver) = channel();
-
-        thread::spawn(move || {
-            let stdin = stdin().keys();
-            for key in stdin {
-                match key {
-                    Ok(Key::Ctrl('c')) => sender.send(true).unwrap(),
-                    _ => (),
-                }
-            }
-        });
+        let mut input = GameInput::new();
+        let mut renderer = GameRenderer::new();
 
         let mut next_states: [GameState; EXPAND_SIZE] = array_init::array_init(|_| GameState::initial_state());
         let initial_state = GameState::initial_state();
@@ -38,16 +26,16 @@ impl TetrisAuto{
             mem::swap(&mut curr_heap, &mut next_heap);
             next_heap.clear();
 
-            curr_heap.peak().unwrap().render();
+            renderer.render_game(curr_heap.peak().unwrap());
             if curr_heap.peak().unwrap().brick_count >= MAX_BRICKS_COUNT {
                 Self::save_result(curr_heap.peak().unwrap());
                 return;
             }
-            if let Ok(_) = receiver.try_recv() {
+            if let Ok(_) = input.try_get_interrupt() {
                 Self::save_result(curr_heap.peak().unwrap());
                 return;
             }
-            stdout.flush().unwrap();
+            renderer.flush();
 
             // match stdin_key.next() {
             //     Some(Ok(termion::event::Key::Ctrl('c'))) => process::exit(0),

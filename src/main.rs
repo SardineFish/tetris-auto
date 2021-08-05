@@ -13,6 +13,7 @@ pub mod game_play;
 pub mod auto;
 pub mod fixed_heap;
 pub mod utils;
+pub mod game_io;
 
 #[allow(warnings)]
 fn main() {

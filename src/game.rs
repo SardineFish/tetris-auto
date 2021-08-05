@@ -1,6 +1,5 @@
 
 use num::range_step_inclusive;
-use termion::{clear, cursor};
 
 use crate::{brick::{Brick}, grid::GameGrids, op::{GameOP}, random::{self, RANDOM_SEED, get_random_num}, vec2::{Vec2}};
 
@@ -150,26 +149,6 @@ impl GameState {
         self.brick_count += 1;
 
         brick
-    }
-
-    pub fn render(&self) {
-        print!("{}", clear::All);
-        print!("{}Score: {}", cursor::Goto(13, 3), self.score);
-        print!("{}Bricks: {}", cursor::Goto(13, 5), self.brick_count);
-        for y in 0..20 {
-            for x in 0..10 {
-                match self.grids.get(Vec2(x, y)) {
-                    true => print!("{}*", cursor::Goto(x as u16 + 1, y as u16 + 1)),
-                    false => print!("{} ", cursor::Goto(x as u16 + 1, y as u16 + 1)),
-                }
-            }
-        }
-        for y in 1..=20 {
-            print!("{}|", cursor::Goto(11, y));
-        }
-        for x in 1..=10 {
-            print!("{}-", cursor::Goto(x, 21));
-        }
     }
 
     pub fn clone_from(&mut self, state: &Self) {
