@@ -46,6 +46,7 @@ mod unix_renderer {
         fn render_game(&mut self, state: &GameState) {
             print!("{}", clear::All);
             print!("{}Score: {}", cursor::Goto(13, 3), state.score);
+            print!("{}SP Score: {}", cursor::Goto(13, 4), state.sp_score);
             print!("{}Bricks: {}", cursor::Goto(13, 5), state.brick_count);
             for y in 0..20 {
                 for x in 0..10 {
