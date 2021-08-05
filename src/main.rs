@@ -1,6 +1,7 @@
 
 
 use auto::TetrisAuto;
+use game_io::GetInput;
 use game_play::Game;
 
 pub mod grid;
@@ -30,5 +31,13 @@ fn main() {
     //     }
     // });
 
-    TetrisAuto::start();
+    let (mut kill_bus, join) = TetrisAuto::run_continuous(8);
+    let mut input = game_io::GameInput::new();
+    loop {
+        if input.try_get_interrupt().is_ok() {
+            kill_bus.broadcast(());
+            break;
+        }
+    }
+    join.join();
 }
