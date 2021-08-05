@@ -13,6 +13,9 @@ array-init = "2.0.0"
 [target.'cfg(target_family="unix")'.dependencies]
 termion = "1.5.6"
 
+[target.'cfg(target_family="windows")'.dependencies]
+crossterm = "0.20.0"
+
 [dev-dependencies]
 rand = "0.8.4"
 
