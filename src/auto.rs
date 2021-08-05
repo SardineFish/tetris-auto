@@ -1,4 +1,4 @@
-use std::{array, collections::BinaryHeap, io::{self, Write, stdin, stdout}, mem, os::macos::fs, process, sync::{Arc, mpsc::channel}, thread};
+use std::{io::{Write, stdin, stdout}, mem, sync::{mpsc::channel}, thread};
 
 use termion::{event::Key, input::{TermRead}, raw::IntoRawMode};
 use crate::{game::MAX_BRICKS_COUNT, op::GameOPStr};
@@ -14,7 +14,7 @@ pub struct  TetrisAuto {
 
 impl TetrisAuto{
     pub fn start()  {
-        let mut stdin_key = stdin().keys();
+        // let mut stdin_key = stdin().keys();
         let mut stdout = stdout().into_raw_mode().unwrap();
         let mut curr_heap = FixedHeap::<GameState, HEAP_SIZE>::default();
         let mut next_heap = FixedHeap::<GameState, HEAP_SIZE>::default();

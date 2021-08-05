@@ -1,6 +1,4 @@
 
-use std::ops::Shl;
-
 use crate::{brick::Brick, vec2::Vec2};
 
 pub const GRID_WIDTH: u32 = 10;
@@ -54,6 +52,7 @@ impl GameGrids {
     }
 
     #[inline(always)]
+    #[allow(dead_code)]
     fn column_mask(x: i8) -> u64 {
         0x1000100010001 << x
     }

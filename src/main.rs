@@ -1,9 +1,7 @@
 
-use std::{io::{self, stdin}, process, thread};
 
 use auto::TetrisAuto;
 use game_play::Game;
-use termion::{event::Key, input::TermRead};
 
 pub mod grid;
 pub mod game;
@@ -16,6 +14,7 @@ pub mod auto;
 pub mod fixed_heap;
 pub mod utils;
 
+#[allow(warnings)]
 fn main() {
     let game = Game::new();
     // game.start();

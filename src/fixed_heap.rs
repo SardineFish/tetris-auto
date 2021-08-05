@@ -1,6 +1,4 @@
-use std::{ mem::{self, MaybeUninit}, slice::Iter};
-
-use crate::game::GameState;
+use std::{ mem::{self}, slice::Iter};
 
 pub struct FixedHeap<T, const N: usize> {
     data: Vec<T>,
@@ -39,6 +37,7 @@ impl<T, const N: usize> Default for FixedHeap<T, N> where T : Default {
 }
 
 impl<T, const N: usize> FixedHeap<T, N> where T : Copy + Default {
+    #[allow(dead_code)]
     fn new() -> Self {
         Self {
             data: Vec::with_capacity(N),

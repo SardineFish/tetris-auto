@@ -1,6 +1,6 @@
-use std::{io::{self, Stdout, Write, stdout}, process, sync::mpsc::channel, thread};
+use std::{io::{self, Stdout, Write}, process, sync::mpsc::channel, thread};
 
-use crate::{brick::Brick, game::{self, GameState}, op::GameOP, vec2::{self, Vec2}};
+use crate::{brick::Brick, game::{self, GameState}, op::GameOP, vec2::{Vec2}};
 use termion::{event::Key, clear, cursor, input::TermRead, raw::{IntoRawMode, RawTerminal}};
 
 pub struct Game {
@@ -23,9 +23,9 @@ impl Game {
     pub fn start(mut self) {
         let (sender, receiver) = channel();
         let mut stdout = io::stdout().into_raw_mode().unwrap();
-        write!(stdout, "{}", clear::All);
-        let join = thread::spawn(move || {
-            let mut stdin = io::stdin();
+        write!(stdout, "{}", clear::All).unwrap();
+        let _ = thread::spawn(move || {
+            let stdin = io::stdin();
             for key in stdin.keys() {
                 let op = match key {
                     Ok(Key::Left) => GameOP::Left(1),
@@ -34,8 +34,8 @@ impl Game {
                     Ok(Key::Char(' ')) => GameOP::New,
                     Ok(Key::Up) => GameOP::Rotate(1),
                     Ok(Key::Ctrl('c')) => {
-                        write!(stdout, "{}", cursor::Show);
-                        stdout.suspend_raw_mode();
+                        write!(stdout, "{}", cursor::Show).unwrap();
+                        stdout.suspend_raw_mode().unwrap();
                         drop(stdout);
                         process::exit(0);
                     },
@@ -66,7 +66,7 @@ impl Game {
             GameOP::New => {
                 game::INITIAL_POS
             },
-            GameOP::Rotate(rot) => {
+            GameOP::Rotate(_) => {
                 self.brick_pos
             },
             GameOP::Left(dx) => self.brick_pos + Vec2(-dx, 0),

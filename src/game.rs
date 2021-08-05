@@ -1,9 +1,8 @@
-use std::ops;
 
 use num::range_step_inclusive;
 use termion::{clear, cursor};
 
-use crate::{brick::{self, Brick}, grid::GameGrids, op::{self, GameOP}, random::{self, RANDOM_SEED, get_random_num}, vec2::{self, Vec2}};
+use crate::{brick::{Brick}, grid::GameGrids, op::{GameOP}, random::{self, RANDOM_SEED, get_random_num}, vec2::{Vec2}};
 
 pub const INITIAL_POS: Vec2 = Vec2(4, 0);
 pub const MAX_BRICKS_COUNT: usize = 10000;
@@ -197,7 +196,7 @@ impl GameState {
             let pos = Vec2((state & 0b1111) as i8, ((state & 0b111110000) >> 4) as i8);
             let rot = (state & 0b1111_0000000000) >> 10;
             
-            let brick = ghost.next_brick();
+            ghost.next_brick();
             let diff = pos - INITIAL_POS;
             ops.push(GameOP::New);
             match diff.0 {
@@ -238,6 +237,6 @@ mod test {
 
     #[test]
     fn test() {
-        // assert_eq!(size_of::<GameState>(), 0);
+        assert!(size_of::<GameState>() * 800000 < 8 * 1024 * 1024 * 1024);
     }
 }
