@@ -3,7 +3,7 @@ use crate::{game::MAX_BRICKS_COUNT, game_io::{GetInput, RenderGame}, op::GameOPS
 
 use crate::{fixed_heap::FixedHeap, game::GameState, game_io::{GameInput, GameRenderer}};
 
-const HEAP_SIZE: usize = 10000;
+const HEAP_SIZE: usize = 270000;
 const EXPAND_SIZE: usize = 34;
 
 pub struct  TetrisAuto {
