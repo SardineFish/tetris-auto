@@ -137,10 +137,10 @@ impl GameState {
         };
         self.score += terris_score as u32;
         self.sp_score = self.score as i32 
-            - (height as i32 - 15).abs() * 1
-            - (height as i32 - 17).clamp(0, 10).pow(4) * 3
+            - (height as i32 - 16).abs() * 1
+            - (height as i32 - 17).clamp(0, 10).pow(4) * 12
             + (occupied_blocks_count as i32) * 16
-            + (density * 200f32) as i32;
+            + (density.powf(1.8) * 200f32) as i32;
     }
 
     pub fn next_brick(&mut self) -> Brick {

@@ -158,22 +158,24 @@ mod win_renderer {
 
     impl RenderGame for GameRenderer {
         fn render_game(&mut self, state: &crate::game::GameState) {
-            stdout().queue(terminal::Clear(ClearType::All));
-            for y in 0..20 {
-                for x in 0..10 {
-                    match state.grids.get(Vec2(x, y)) {
-                        true => print!("*"),
-                        false => print!(" "),
-                    }
-                }
-                println!("|");
+            // stdout().queue(terminal::Clear(ClearType::All));
+            // for y in 0..20 {
+            //     for x in 0..10 {
+            //         match state.grids.get(Vec2(x, y)) {
+            //             true => print!("*"),
+            //             false => print!(" "),
+            //         }
+            //     }
+            //     println!("|");
 
-            }
-            for x in 1..=10 {
-                print!("-");
-            }
+            // }
+            // for x in 1..=10 {
+            //     print!("-");
+            // }
             println!("");
             println!("Score: {}", state.score);
+            println!("SP Score: {}", state.sp_score);
+            println!("Rate: {:.2}", state.score as f64 / state.brick_count as f64);
             println!("Bricks: {}", state.brick_count);
         }
 
